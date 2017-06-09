@@ -4,6 +4,8 @@ from math import *
 from gmath import *
 import random
 
+const = [0.5, 0.5, 0.5]
+
 def scanlineCoords(polygon):
     return (polygon[1], polygon[2])
 
@@ -66,6 +68,30 @@ def scanline_convert(polygons, i, screen, zbuffer):
         z0 += dz0
         z1 += dz1
 
+def light(matrix, index, ka, kd, ks, normal, lightType, color):
+    pass
+
+def dotProduct(vector1, vector2):
+    pass
+
+def addVector(vector1, vector2):
+    pass
+
+def subtractVector(vector1, vector2):
+    pass
+
+def scaleVector(vector, scale):
+    pass
+
+def crossProduct(vector1, vector2):
+    pass
+
+def magnitude(vector):
+    pass
+
+def normalize(vector):
+    pass
+        
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0);
     add_point(polygons, x1, y1, z1);
