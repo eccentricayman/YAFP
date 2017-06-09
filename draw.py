@@ -2,11 +2,14 @@ from display import *
 from matrix import *
 from math import *
 from gmath import *
+import random
 
 def scanlineCoords(polygon):
     return (polygon[1], polygon[2])
 
-def scanline_convert(polygons, i, screen, zbuffer, color):
+def scanline_convert(polygons, i, screen, zbuffer):
+    color = [random.randrange(256), random.randrange(256), random.randrange(256)]
+    
     vertices = sorted([polygons[i], polygons[i + 1], polygons[i + 2]], key = scanlineCoords)
 
     xlow = vertices[0][0]
@@ -79,7 +82,7 @@ def draw_polygons( matrix, screen, zbuffer, color ):
         normal = calculate_normal(matrix, point)[:]
         #print normal
         if normal[2] > 0:
-            scanline_convert(matrix, point, screen, zbuffer, color)
+            scanline_convert(matrix, point, screen, zbuffer)
             draw_line( int(matrix[point][0]),
                        int(matrix[point][1]),
                        matrix[point][2],

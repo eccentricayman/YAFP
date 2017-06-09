@@ -206,6 +206,8 @@ def run(filename):
             print 'Saving frame: ' + fname
             save_extension( screen, fname )
 
+        clear_zbuffer(zb)
+
     if num_frames > 1:
         make_animation(name)
     
