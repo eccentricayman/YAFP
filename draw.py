@@ -4,13 +4,16 @@ from math import *
 from gmath import *
 import random
 
-const = [0.5, 0.5, 0.5]
+constants = [0.5, 0.5, 0.5]
 
 def scanlineCoords(polygon):
     return (polygon[1], polygon[2])
 
-def scanline_convert(polygons, i, screen, zbuffer):
-    color = [random.randrange(256), random.randrange(256), random.randrange(256)]
+def scanline_convert(polygons, i, screen, zbuffer, color, normal, settings):
+    if settings['shading'] == 'flat':
+        color = light(polygons, i, [constants, constants, constants], normal, settings, color)
+    else:
+        color = [random.randrange(256), random.randrange(256), random.randrange(256)]
     
     vertices = sorted([polygons[i], polygons[i + 1], polygons[i + 2]], key = scanlineCoords)
 
@@ -68,47 +71,102 @@ def scanline_convert(polygons, i, screen, zbuffer):
         z0 += dz0
         z1 += dz1
 
-def light(matrix, index, ka, kd, ks, normal, lightType, color):
-    pass
+#coefficients:
+#0: ka
+#1: kd
+#2: ks
+def light(matrix, index, coefficients, normal, settings, color):
+    for ctr in range(3):
+        ambient = settings['ambient'][ctr] * coefficients[0][ctr]
+        color[ctr] += ambient
+
+        for light in settings['lights']:
+            source = settings['lights'][light]['location']
+            location = subtractVector(source, matrix[index])
+            vectorProduct = dotProduct(normalize(normal), normalize(location))
+            if vectorProduct < 0:
+                vectorProduct = 0
+
+            diffuse = source[ctr] * coefficients[1][ctr] * vectorProduct
+
+            R = normalize(subtractVector(scaleVector(normalize(normal), vectorProduct * 2), normalize(location)))
+            V = addVector(matrix[index], [0, 0, 10]) #change second one
+            vectorProduct2 = dotProduct(R, V)
+            if vectorProduct2 < 0:
+                vectorProduct2 = 0
+
+            specular = source[ctr] * coefficients[2][ctr] * vectorProduct2
+
+            color[ctr] += diffuse + specular
+    return color
 
 def dotProduct(vector1, vector2):
-    pass
+    return vector1[0] * (vector2[0] + vector1[1]) * (vector2[1] + vector1[2]) * vector2[2]
 
 def addVector(vector1, vector2):
-    pass
+    added = []
+    for ctr in range(3):
+        added.append(vector1[ctr] + vector2[ctr])
+    return added
 
 def subtractVector(vector1, vector2):
-    pass
+    subtracted = []
+    for ctr in range(3):
+        subtracted.append(vector1[ctr] - vector2[ctr])
+    return subtracted
 
-def scaleVector(vector, scale):
-    pass
+def scaleVector(vectors, scale):
+    scale = []
+    for vector in vectors:
+        scale.append(vector * scale)
+    return scale
 
 def crossProduct(vector1, vector2):
-    pass
+    return [
+        (vector1[1] * vector2[2]) - (vector1[2] * vector2[1]),
+        (vector1[2] * vector2[0]) - (vector1[0] * vector2[2]),
+        (vector1[0] * vector2[1]) - (vector1[1] * vector2[0])
+    ]
 
-def magnitude(vector):
-    pass
+def magnitude(vectors):
+    magnitude = 0
+    for vector in vectors:
+        magnitude += vector ** 2
+    return sqrt(magnitude)
 
-def normalize(vector):
-    pass
+def normalize(vectors):
+    normals = []
+    for vector in vectors:
+        normals.append(vector / magnitude(vectors))
+    return normals
         
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0);
     add_point(polygons, x1, y1, z1);
     add_point(polygons, x2, y2, z2);
 
-def draw_polygons( matrix, screen, zbuffer, color ):
+def draw_polygons( matrix, screen, zbuffer, color, setting=None ):
     if len(matrix) < 2:
         print 'Need at least 3 points to draw'
         return
 
-    point = 0    
+    point = 0
+
+    r = 255
+    g = 255
+    b = 0
+    
     while point < len(matrix) - 2:
 
         normal = calculate_normal(matrix, point)[:]
         #print normal
         if normal[2] > 0:
-            scanline_convert(matrix, point, screen, zbuffer)
+            #color = [r,g,b]
+            scanline_convert(matrix, point, screen, zbuffer, color, normal, setting)
+            r = (r + 33) % 256
+            g = (g + 56) % 256
+            b = (b + 107) % 256
+            
         point+= 3
 
 

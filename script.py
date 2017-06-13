@@ -94,6 +94,28 @@ def second_pass( commands, num_frames ):
                 #print 'knob: ' + knob_name + '\tvalue: ' + str(frames[f][knob_name])
     return frames
 
+def getSettings(commands):
+    settings = {}
+    settings['lights'] = {}
+    #default ambient
+    settings['ambient'] = [10, 10, 10]
+    settings['constants'] = {}
+    settings["shading"] = ""
+
+    for command in commands:
+        line = commands[command][0]
+
+        if line == "light":
+            settings['lights'][command] = commands[command][1]
+        if line == "ambient":
+            settings['ambient'] = [commands[command][1], commands[command][2], commands[command][3]]
+        if line == "shade_type":
+            settings['shading'] = commands[command][1]
+        if line == "constants":
+            settings['constants'][command] = commands[command][1]
+
+    return settings
+    
 def run(filename):
     """
     This function runs an mdl script
@@ -111,6 +133,10 @@ def run(filename):
         return
 
     (name, num_frames) = first_pass(commands)
+
+    settings = {}
+    settings = getSettings(symbols)
+    
     frames = second_pass(commands, num_frames)
     #print frames
     step = 0.1
@@ -150,19 +176,19 @@ def run(filename):
                         args[0], args[1], args[2],
                         args[3], args[4], args[5])
                 matrix_mult( stack[-1], tmp )
-                draw_polygons(tmp, screen, zb, color)
+                draw_polygons(tmp, screen, zb, color, settings)
                 tmp = []
             elif c == 'sphere':
                 add_sphere(tmp,
                            args[0], args[1], args[2], args[3], step)
                 matrix_mult( stack[-1], tmp )
-                draw_polygons(tmp, screen, zb, color)
+                draw_polygons(tmp, screen, zb, color, settings)
                 tmp = []
             elif c == 'torus':
                 add_torus(tmp,
                           args[0], args[1], args[2], args[3], args[4], step)
                 matrix_mult( stack[-1], tmp )
-                draw_polygons(tmp, screen, zb, color)
+                draw_polygons(tmp, screen, zb, color, settings)
                 tmp = []
             elif c == 'move':
                 if command[-1]:
