@@ -76,32 +76,28 @@ def scanline_convert(polygons, i, screen, zbuffer, color, normal, settings):
 #1: kd
 #2: ks
 def light(matrix, index, coefficients, normal, settings, color):
+    N = normal
+    nN = normalize(normal)
+    
     for ctr in range(3):
         ambient = settings['ambient'][ctr] * coefficients[0][ctr]
         color[ctr] += ambient
 
         for light in settings['lights']:
             source = settings['lights'][light]['location']
-            location = subtractVector(source, matrix[index])
-            vectorProduct = dotProduct(normalize(normal), normalize(location))
-            if vectorProduct < 0:
-                vectorProduct = 0
+            L = subtractVector(source, matrix[index])
+            nL = normalize(L)
+            diffuse = source[ctr] * coefficients[1][ctr] * max(dotProduct(nN, nL), 0)
 
-            diffuse = source[ctr] * coefficients[1][ctr] * vectorProduct
-
-            R = normalize(subtractVector(scaleVector(normalize(normal), vectorProduct * 2), normalize(location)))
-            V = addVector(matrix[index], [0, 0, 10]) #change second one
-            vectorProduct2 = dotProduct(R, V)
-            if vectorProduct2 < 0:
-                vectorProduct2 = 0
-
-            specular = source[ctr] * coefficients[2][ctr] * vectorProduct2
+            nR = normalize(subtractVector(scaleVector(nN, (dotProduct(nN, nL) * 2)), nL))
+            nV = addVector(matrix[index], [0, 0, 10])
+            specular = source[ctr] * coefficients[2][ctr] * max(dotProduct(nR, nV), 0) ** 1
 
             color[ctr] += diffuse + specular
     return color
 
 def dotProduct(vector1, vector2):
-    return vector1[0] * (vector2[0] + vector1[1]) * (vector2[1] + vector1[2]) * vector2[2]
+    return vector1[0] * vector2[0] + vector1[1] * vector2[1] + vector1[2] * vector2[2]
 
 def addVector(vector1, vector2):
     added = []
@@ -116,17 +112,7 @@ def subtractVector(vector1, vector2):
     return subtracted
 
 def scaleVector(vectors, scale):
-    scale = []
-    for vector in vectors:
-        scale.append(vector * scale)
-    return scale
-
-def crossProduct(vector1, vector2):
-    return [
-        (vector1[1] * vector2[2]) - (vector1[2] * vector2[1]),
-        (vector1[2] * vector2[0]) - (vector1[0] * vector2[2]),
-        (vector1[0] * vector2[1]) - (vector1[1] * vector2[0])
-    ]
+    return [vector * scale for vector in vectors]
 
 def magnitude(vectors):
     magnitude = 0
